@@ -1,0 +1,23 @@
+# Common Helm ignore patterns
+
+.DS_Store
+.git/
+.gitignore
+.bzr/
+.bzrignore
+.hg/
+.hgignore
+.svn/
+CVS/
+_.swp
+_.bak
+_.tmp
+_.orig
+_.log
+_.md
+_.txt
+_.env
+\*.tgz
+.envrc
+.vscode/
+.idea/

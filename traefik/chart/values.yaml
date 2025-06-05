@@ -1,0 +1,44 @@
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+
+ports:
+  web:
+    port: 80
+    nodePort: 30080
+    expose:
+      default: true
+    exposedPort: 8080
+
+  traefik:
+    port: 9000
+    nodePort: 30900
+    expose:
+      default: true
+    exposedPort: 9000
+
+service:
+  type: NodePort
+
+api:
+  dashboard: true
+  insecure: true
+  entryPoint: traefik
+
+dashboard:
+  enabled: true
+  ingressRoute:
+    enabled: true
+    name: traefik-dashboard
+    namespace: traefik
+    entryPoint: traefik
+    match: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+    service:
+      name: api@internal
+      kind: TraefikService

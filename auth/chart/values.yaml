@@ -1,0 +1,30 @@
+app:
+  name: auth
+  image:
+    repository: auth
+    tag: latest
+    port: 5000
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingressRoute:
+  entryPoints:
+    - web
+  match: "PathPrefix(`/`)"
+  middlewares:
+    - auth-request
+    - rewrite-to-health
+  service:
+    name: auth
+    port: 5000
+
+middlewares:
+  authRequest:
+    name: auth-request
+    address: http://auth.default.svc.cluster.local:5000/auth
+  rewriteToHealth:
+    name: rewrite-to-health
+    regex: ^/$
+    replacement: /health

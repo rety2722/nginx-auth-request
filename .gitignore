@@ -223,6 +223,7 @@ pyrightconfig.json
 
 ### VisualStudioCode ###
 .vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -239,5 +240,12 @@ pyrightconfig.json
 # Ignore all local history of files
 .history
 .ionide
+
+### Helm ###
+# Chart dependencies
+**/charts/*.tgz
+
+### prettier ###
+.prettierignore
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,python,linux
