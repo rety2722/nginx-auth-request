@@ -1,20 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.app.name }}
+  name: {{ include "auth.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "auth.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
-      app: {{ .Values.app.name }}
+      {{- include "auth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Values.app.name }}
+        {{- include "auth.selectorLabels" . | nindent 8 }}
     spec:
       containers:
-        - name: {{ .Values.app.name }}
+        - name: {{ .Chart.Name }}
           image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ .Values.app.image.port }}
+              protocol: TCP

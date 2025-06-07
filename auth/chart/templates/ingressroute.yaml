@@ -1,20 +1,24 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: auth-route
-  namespace: default
+  name: {{ include "auth.fullname" . }}-route
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "auth.labels" . | nindent 4 }}
 spec:
   entryPoints:
-    {{- range .Values.ingressRoute.entryPoints }}
-    - {{ . }}
-    {{- end }}
+    {{- include "auth.entryPoints" . | nindent 4 }}
   routes:
-    - match: {{ .Values.ingressRoute.match }}
+    - match: "Path(`/`)"
       kind: Rule
       middlewares:
-        {{- range .Values.ingressRoute.middlewares }}
-        - name: {{ . }}
-        {{- end }}
+        - name: {{ .Values.middlewares.rewriteToHealth.name }}
+        - name: {{ .Values.middlewares.authRequest.name }}
       services:
-        - name: {{ .Values.ingressRoute.service.name }}
-          port: {{ .Values.ingressRoute.service.port }}
+        {{- include "auth.service" . | nindent 8 }}
+    
+    # Internal-only auth and health endpoints
+    - match: "(Path(`/auth`) || Path(`/health`)) && {{ include "auth.internalIPs" . }}"
+      kind: Rule
+      services:
+        {{- include "auth.service" . | nindent 8 }}

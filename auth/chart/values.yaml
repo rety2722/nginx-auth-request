@@ -1,9 +1,14 @@
+replicaCount: 1
+
 app:
   name: auth
   image:
     repository: auth
     tag: latest
     port: 5000
+
+nameOverride: auth
+fullnameOverride: auth
 
 service:
   type: ClusterIP
@@ -12,7 +17,6 @@ service:
 ingressRoute:
   entryPoints:
     - web
-  match: "PathPrefix(`/`)"
   middlewares:
     - auth-request
     - rewrite-to-health
