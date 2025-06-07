@@ -1,0 +1,41 @@
+# Default values for error-pages
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: alpine
+  pullPolicy: IfNotPresent
+
+nameOverride: "error-pages"
+fullnameOverride: "error-pages"
+
+service:
+  type: ClusterIP
+  port: 80
+
+errorMessages:
+  # Authentication errors
+  401: "Authentication failed: Invalid or missing x-pretest header"
+  403: "Access denied: Insufficient permissions"
+  
+  # Client errors
+  400: "Bad request: Invalid request format"
+  404: "Page not found: The requested resource does not exist"
+  408: "Request timeout: The request took too long to process"
+  413: "Payload too large: Request body exceeds maximum size"
+  429: "Too many requests: Rate limit exceeded"
+  
+  # Server errors
+  500: "Internal server error: Something went wrong on our end"
+  502: "Bad gateway: Upstream server error"
+  503: "Service unavailable: Server is temporarily unavailable"
+  504: "Gateway timeout: Upstream server timeout"
+
+# Node selector for deployment
+nodeSelector: {}
+
+# Tolerations for deployment
+tolerations: []
+
+# Affinity rules
+affinity: {}

@@ -60,7 +60,7 @@ Service reference for templates
 Internal IP ranges for ClientIP matching
 */}}
 {{- define "auth.internalIPs" -}}
-ClientIP(`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`)
+ClientIP(`10.0.0.0/8`)
 {{- end }}
 
 {{/*
@@ -70,4 +70,19 @@ Entry points template
 {{- range .Values.ingressRoute.entryPoints }}
 - {{ . }}
 {{- end }}
+{{- end }}
+
+{{/*
+Error service configuration - points to error-pages chart
+*/}}
+{{- define "auth.errorService" -}}
+name: {{ .Values.middlewares.errorPages.service.name }}
+port: {{ .Values.middlewares.errorPages.service.port }}
+{{- end }}
+
+{{/*
+Error query path
+*/}}
+{{- define "auth.errorQuery" -}}
+{{ .Values.middlewares.errorPages.query }}
 {{- end }}

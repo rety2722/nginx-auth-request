@@ -32,3 +32,21 @@ middlewares:
     name: rewrite-to-health
     regex: ^/$
     replacement: /health
+  errorPages:
+    name: error-pages
+    service:
+      name: error-pages
+      port: 80
+    query: "/{status}.html"  # Dynamic query using status code
+    statusCodes:
+      - "400"
+      - "401" 
+      - "403"
+      - "404"
+      - "408"
+      - "413"
+      - "429"
+      - "500"
+      - "502"
+      - "503"
+      - "504"

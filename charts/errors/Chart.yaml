@@ -1,0 +1,10 @@
+apiVersion: v2
+name: error-pages
+description: A Helm chart for serving custom error pages
+type: application
+version: 0.1.0
+appVersion: "1.0"
+keywords:
+  - error-pages
+  - nginx
+  - static-content

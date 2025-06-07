@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "error-pages.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "error-pages.labels" . | nindent 4 }}
+data:
+  {{- range $code, $message := .Values.errorMessages }}
+  {{ printf "%s.html" $code }}: {{ $message | quote }}
+  {{- end }}
+  index.html: {{ index .Values.errorMessages "401" | quote }}
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri.html =404;
+        }
+        
+        # Return plain text for all error pages
+        location ~ ^/(\d+)\.html$ {
+            root /usr/share/nginx/html;
+            default_type text/plain;
+        }
+        
+        # Security headers
+        add_header X-Content-Type-Options nosniff;
+        add_header X-Frame-Options DENY;
+        add_header X-XSS-Protection "1; mode=block";
+    }

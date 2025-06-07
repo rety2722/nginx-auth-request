@@ -1,4 +1,4 @@
-.PHONY: all start clean build-auth kind-reset load-image apply-auth helm-traefik wait-for-ready-port port-forward clean-crd clean-all wait-for-ready-pod
+.PHONY: all start apply-error-pages clean build-auth kind-reset load-image apply-auth helm-traefik wait-for-ready-port port-forward clean-crd clean-all wait-for-ready-pod
 
 KIND_CLUSTER_NAME = kind
 AUTH_IMAGE = auth:latest
@@ -6,7 +6,7 @@ AUTH_IMAGE = auth:latest
 all: start
 
 # start: kind-reset build-auth load-image helm-traefik apply-auth wait-for-ready-pod wait-for-ready-port port-forward
-start: kind-reset build-auth load-image helm-traefik apply-auth wait-for-ready port-forward
+start: kind-reset build-auth load-image helm-traefik apply-error-pages apply-auth wait-for-ready port-forward
 
 kind-reset:
 	@echo "[1] Resetting kind cluster..."
@@ -29,9 +29,15 @@ helm-traefik:
 	  -n traefik --create-namespace \
 	  -f traefik-values.yaml
 
-apply-auth: helm-traefik
+apply-error-pages:
+	@echo "[4.5] Deploying error-pages via Helm..."
+	@helm upgrade --install error-pages ./charts/errors \
+      --namespace default \
+      --create-namespace
+
+apply-auth: helm-traefik apply-error-pages
 	@echo "[5] Deploying auth via Helm..."
-	@helm upgrade --install auth ./auth/chart \
+	@helm upgrade --install auth ./charts/auth-app \
 	  --namespace default \
 	  --create-namespace
 
@@ -40,6 +46,16 @@ wait-for-ready:
 	@kubectl wait --for=condition=available --timeout=180s deployment/traefik -n traefik
 	@kubectl wait --for=condition=Ready --timeout=60s pod -l app.kubernetes.io/name=traefik -n traefik
 	@echo "✓ Traefik is ready."
+
+	@echo "[6.5] Waiting for error-pages to be ready..."
+	@kubectl wait --for=condition=available --timeout=120s deployment/error-pages -n default
+	@kubectl wait --for=condition=Ready --timeout=60s pod -l app.kubernetes.io/name=error-pages -n default
+	@echo "✓ Error-pages is ready."
+
+	@echo "[6.7] Waiting for auth service to be ready..."
+	@kubectl wait --for=condition=available --timeout=120s deployment/auth -n default
+	@kubectl wait --for=condition=Ready --timeout=60s pod -l app.kubernetes.io/name=auth -n default
+	@echo "✓ Auth service is ready."
 
 wait-for-ready-pod:
 	@echo "[6] Waiting for Traefik pod to be ready..."
@@ -82,6 +98,10 @@ clean:
 	@echo "[0.1] Uninstalling auth app..."
 	@helm uninstall auth -n default || true
 	@echo "✓ Removed auth Helm release."
+
+	@echo "[0.1.5] Uninstalling error-pages..."
+	@helm uninstall error-pages -n default || true
+	@echo "✓ Removed error-pages Helm release."
 
 	@echo "[0.2] Uninstalling Traefik..."
 	@helm uninstall traefik -n traefik || true

@@ -13,12 +13,8 @@ spec:
       kind: Rule
       middlewares:
         - name: {{ .Values.middlewares.rewriteToHealth.name }}
+        - name: {{ .Values.middlewares.errorPages.name }}
         - name: {{ .Values.middlewares.authRequest.name }}
       services:
         {{- include "auth.service" . | nindent 8 }}
-    
-    # Internal-only auth and health endpoints
-    - match: "(Path(`/auth`) || Path(`/health`)) && {{ include "auth.internalIPs" . }}"
-      kind: Rule
-      services:
-        {{- include "auth.service" . | nindent 8 }}
+
