@@ -1,8 +1,8 @@
 replicaCount: 1
 
 app:
-  name: auth
   image:
+    name: auth
     repository: auth
     tag: latest
     port: 5000
@@ -27,7 +27,6 @@ ingressRoute:
 middlewares:
   authRequest:
     name: auth-request
-    address: http://auth.default.svc.cluster.local:5000/auth
   rewriteToHealth:
     name: rewrite-to-health
     regex: ^/$
@@ -37,7 +36,7 @@ middlewares:
     service:
       name: error-pages
       port: 80
-    query: "/{status}.html"  # Dynamic query using status code
+    query: "/{status}.html"
     statusCodes:
       - "400"
       - "401" 

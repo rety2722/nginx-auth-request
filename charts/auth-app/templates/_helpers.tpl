@@ -73,6 +73,13 @@ Entry points template
 {{- end }}
 
 {{/*
+Internal host address
+*/}}
+{{- define "auth.hostAddress" -}}
+{{ include "auth.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+{{- end }}
+
+{{/*
 Error service configuration - points to error-pages chart
 */}}
 {{- define "auth.errorService" -}}

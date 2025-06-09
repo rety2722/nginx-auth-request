@@ -1,4 +1,4 @@
-.PHONY: all start apply-error-pages clean docker-build-auth kind-reset kind-load-image apply-auth helm-traefik port-forward clean-crd clean-all wait-for-ready docker-build-all kind-create
+.PHONY: all start apply-error-pages clean docker-build-auth kind-reset apply-auth helm-traefik port-forward clean-crd clean-all wait-for-ready docker-build-all kind-create
 
 KIND_CLUSTER_NAME = kind
 KIND_CONFIG_FILE = kind-config.yaml
@@ -8,7 +8,13 @@ AUTH_IMAGE_DIR = ./auth
 
 all: start
 
-start: docker-build-auth kind-reset kind-load-image helm-traefik apply-error-pages apply-auth wait-for-ready port-forward
+start: start-skaffold
+
+start-kind-create: kind-create start-skaffold
+
+start-kind-reset: kind-reset start-skaffold
+
+start-kind-make: docker-build-auth kind-reset helm-traefik apply-error-pages apply-auth wait-for-ready port-forward
 
 # ==== Docker build ====
 docker-build-all: docker-build-auth
@@ -32,10 +38,6 @@ kind-create:
 	@echo "✓ Setting kubectl context to new cluster..."
 	@kubectl config use-context kind-$(KIND_CLUSTER_NAME)
 	@kubectl cluster-info --context kind-$(KIND_CLUSTER_NAME)
-
-kind-load-image:
-	@echo "Loading image into kind cluster..."
-	@kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER_NAME)
 
 # ==== helm deployments ====
 helm-traefik:
@@ -84,6 +86,9 @@ port-forward:
 	trap 'kill \$$PORT_FORWARD_PID' EXIT; \
 	wait \$$PORT_FORWARD_PID"
 
+start-skaffold:
+	@echo "Starting Skaffold..."
+	@skaffold dev
 clean:
 	@echo "Uninstalling auth app..."
 	@helm uninstall auth -n default || true

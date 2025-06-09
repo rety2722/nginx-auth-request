@@ -1,0 +1,69 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: nginx-to-traefik
+
+build:
+  artifacts:
+    - image: auth
+      context: ./auth
+      docker:
+        dockerfile: Dockerfile
+  local:
+    push: false        
+    useDockerCLI: true
+
+deploy:
+  statusCheckDeadlineSeconds: 300
+  helm:
+    releases:
+      - name: traefik
+        remoteChart: traefik/traefik
+        namespace: traefik
+        createNamespace: true
+        valuesFiles:
+          - traefik-values.yaml
+        wait: true
+        upgradeOnChange: true
+        
+      - name: error-pages
+        chartPath: ./charts/errors
+        namespace: default
+        createNamespace: true
+        wait: true
+        upgradeOnChange: true
+        
+      - name: auth
+        chartPath: ./charts/auth-app
+        namespace: default
+        createNamespace: true
+        wait: true
+        upgradeOnChange: true
+        setValues:
+          app.image.repository: auth
+          app.image.tag: latest
+
+
+portForward:
+  - resourceType: service
+    resourceName: traefik
+    namespace: traefik
+    port: 8080
+    localPort: 8080
+
+profiles:
+  - name: dev
+    activation:
+      - command: dev
+    build:
+      local:
+        push: false
+        useDockerCLI: true
+    
+  - name: run
+    activation:
+      - command: run
+    build:
+      local:
+        push: false
+        useDockerCLI: true

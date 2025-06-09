@@ -6,18 +6,20 @@ This project is a final version of migration from nginx to using traefik. It wor
 
 To run the project, it would be necessary to install the following:
 
-1. **helm**: https://helm.sh/. Package manager for kubernetes. Greatly simplifies the development.
-2. **kind**: https://kind.sigs.k8s.io/. This is used to configure the kubernetes context.
-3. **make**: https://www.gnu.org/software/make/. The build system for this project. Can be substituted \
+1. **[helm](https://helm.sh/)**: Package manager for kubernetes. Greatly simplifies the development.
+2. **[kind](https://kind.sigs.k8s.io/)**: This is used to configure the kubernetes context.
+3. **[make](https://www.gnu.org/software/make/)**: The build system for this project. Can be substituted
    to any other build system if necessary.
+4. **[skaffold](https://skaffold.dev/)**: The build system that simplifies work with k8s. Is added as a main
+   option. Building without it uses make start-kind-make.
 
-If there is a need to use another cluster context, like minikube, the makefile would need to be adjusted. \
-It is assumed that docker and kubernetes are present on the system and are started and the user configures the context \
+If there is a need to use another cluster context, like minikube, the makefile would need to be adjusted.
+It is assumed that docker and kubernetes are present on the system and are started and the user configures the context
 by themselves.
 
 ## Architecture
 
-Briefly: does the same with gateway by traefik. IngressRoute handles internal routing and api access \
+Briefly: does the same with gateway by traefik. IngressRoute handles internal routing and api access
 (/auth and /health are hidden from the external requests)
 
 The setup consists of these services deployed on Kubernetes:
@@ -58,18 +60,21 @@ The setup consists of these services deployed on Kubernetes:
 The system uses three key Traefik middlewares:
 
 #### **Auth Request Middleware**
+
 - **Name**: `auth-request`
 - **Type**: ForwardAuth
 - **Purpose**: Forwards requests to auth service for validation
 - **Target**: `http://auth.default.svc.cluster.local:5000/auth`
 
 #### **Error Pages Middleware**
+
 - **Name**: `error-pages`
 - **Type**: Errors
 - **Purpose**: Redirects failed requests to custom error pages
 - **Target**: `http://error-pages.default.svc.cluster.local:80`
 
 #### **Path Rewrite Middleware**
+
 - **Name**: `rewrite-to-health`
 - **Type**: ReplacePath
 - **Purpose**: Rewrites successful requests to health endpoint
@@ -80,6 +85,7 @@ The system uses three key Traefik middlewares:
 The system uses Traefik's **IngressRoute** CRD for advanced routing capabilities:
 
 #### **Advanced Routing Features**
+
 - **Custom Resource Definition**: Uses Traefik's native CRDs instead of standard Kubernetes Ingress
 - **Middleware Chaining**: Applies multiple middlewares in sequence (auth → error handling → path rewrite)
 - **Internal Route Protection**: Prevents direct external access to `/auth` and `/health` endpoints
@@ -87,14 +93,15 @@ The system uses Traefik's **IngressRoute** CRD for advanced routing capabilities
 - **Flexible Matching**: Supports complex routing rules beyond simple path matching
 
 #### **Route Configuration**
+
 ```yaml
 # IngressRoute handles all external traffic
 spec:
   entryPoints:
-    - web  # Port 8080
+    - web # Port 8080
   middlewares:
-    - auth-request      # 1st: Authenticate request
-    - error-pages       # 2nd: Handle auth failures  
+    - auth-request # 1st: Authenticate request
+    - error-pages # 2nd: Handle auth failures
     - rewrite-to-health # 3rd: Rewrite successful requests
   routes:
     - match: PathPrefix(`/`)
@@ -105,6 +112,7 @@ spec:
 ```
 
 #### **Security Benefits**
+
 - **Endpoint Isolation**: `/auth` and `/health` are only accessible internally via middleware
 - **Request Validation**: All external requests must pass through authentication chain
 - **Error Handling**: Failed authentication shows custom error pages instead of exposing service details
@@ -143,13 +151,34 @@ A valid request must include the header: `x-pretest: valid-token`
 ## Running the Demo
 
 ```bash
+# Run skaffold when the cluster context, i.e. kind, is already configured
 make start
+```
+
+similar to
+
+```bash
+# Run skaffold when the cluster context, i.e. kind, is already configured
+skaffold dev
 ```
 
 or
 
 ```bash
-make clean && make start
+# Run skaffold with creation of kind context. The context should not exist previously
+make start-kind-create
+```
+
+```bash
+# Run skaffold when the cluster context existed and needs to be reset.
+make start-kind-reset
+```
+
+or
+
+```bash
+# Use the previous version of build. Use in case when skaffold is not needed.
+make clean && make start-kind-make
 ```
 
 ## Testing
